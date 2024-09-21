@@ -3,6 +3,10 @@ require_once __DIR__ . '/../Model/payments_mod.php';
 require '../vendor/autoload.php';
 require_once __DIR__ . '/../Model/db_connection.php';
 
+// Disable error display temporarily
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 $apiKey = 'sk_test_UPJT1HR9EGJtj1gZgi5EnR7N';
 $payments = new Payments($conn, $apiKey);
 
@@ -49,14 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo "Invalid payment method.";
         }
     } catch (PaymongoException $e) {
-        echo "PayMongo API error: " . $e->getMessage();
         error_log("PayMongo API error: " . $e->getMessage());
+        echo "PayMongo API error occurred.";
     } catch (PDOException $e) {
-        echo "Database error: " . $e->getMessage();
         error_log("Database error: " . $e->getMessage());
+        echo "Database error occurred.";
     } catch (Exception $e) {
-        echo "Error: " . $e->getMessage();
         error_log("General error: " . $e->getMessage());
+        echo "An error occurred.";
     }
 }
 ?>
