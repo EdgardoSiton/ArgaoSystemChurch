@@ -10,7 +10,11 @@ $payments = new Payments($conn, $apiKey);
 $payload = @file_get_contents('php://input');
 
 // Log the raw payload for debugging
-file_put_contents(__DIR__ . '/webhook_payload.log', $payload . PHP_EOL, FILE_APPEND);
+$logResult = file_put_contents(__DIR__ . '/webhook_payload.log', $payload . PHP_EOL, FILE_APPEND);
+if ($logResult === false) {
+    error_log('Failed to write to webhook_payload.log');
+}
+
 
 
 $event = json_decode($payload, true);
