@@ -10,7 +10,8 @@ $payments = new Payments($conn, $apiKey);
 $payload = @file_get_contents('php://input');
 
 // Log the raw payload for debugging
-file_put_contents('webhook_payload.log', $payload . PHP_EOL, FILE_APPEND);
+file_put_contents(__DIR__ . '/webhook_payload.log', $payload . PHP_EOL, FILE_APPEND);
+
 
 $event = json_decode($payload, true);
 
