@@ -16,7 +16,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     exit;
 }
 
-// Check the event type
+// Check the event type and fetch necessary details
 $eventType = $event['data']['attributes']['type'] ?? null;
 $paymentIntentId = $event['data']['attributes']['data']['attributes']['payment_intent_id'] ?? null;
 
@@ -26,7 +26,8 @@ if (!$paymentIntentId) {
     exit;
 }
 
-// Get the status based on event type
+// Determine the payment status based on the event type
+$paymentStatus = null;
 if ($eventType === 'payment.paid') {
     $paymentStatus = 'Paid';
 } elseif ($eventType === 'payment.failed') {
@@ -37,12 +38,23 @@ if ($eventType === 'payment.paid') {
     exit;
 }
 
-// Update the payment status based on the payment intent
-// You need to ensure `appsched_id` is tied to `payment_intent_id` in your database
-$stmt = $conn->prepare('UPDATE payments SET payment_status = ?, updated_at = NOW() WHERE payment_intent_id = ?');
-$stmt->bind_param('ss', $paymentStatus, $paymentIntentId);
+// Find the appsched_id associated with the payment_intent_id
+$stmt = $conn->prepare('SELECT appsched_id FROM payments WHERE payment_intent_id = ?');
+$stmt->bind_param('s', $paymentIntentId);
 $stmt->execute();
+$stmt->bind_result($appsched_id);
+$stmt->fetch();
 $stmt->close();
+
+if (!$appsched_id) {
+    http_response_code(400);
+    echo 'No matching appointment ID found';
+    exit;
+}
+
+// Update the payment status and payment method ID
+$paymentMethodId = $event['data']['attributes']['data']['attributes']['payment_method_id'] ?? null;
+$payments->updatePaymentDetails($appsched_id, $paymentStatus, 'Online', $paymentIntentId, $paymentMethodId);
 
 // Respond with success
 http_response_code(200);
