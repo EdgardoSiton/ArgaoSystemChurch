@@ -8,6 +8,10 @@ $payments = new Payments($conn, $apiKey);
 
 // Read the webhook payload from PayMongo
 $payload = @file_get_contents('php://input');
+
+// Log the raw payload for debugging
+file_put_contents('webhook_payload.log', $payload . PHP_EOL, FILE_APPEND);
+
 $event = json_decode($payload, true);
 
 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -16,7 +20,14 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     exit;
 }
 
-// Check the event type and fetch necessary details
+// Check if the expected structure is present
+if (!isset($event['data']['attributes'])) {
+    http_response_code(400);
+    echo 'Malformed payload';
+    exit;
+}
+
+// Fetch necessary details
 $eventType = $event['data']['attributes']['type'] ?? null;
 $paymentIntentId = $event['data']['attributes']['data']['attributes']['payment_intent_id'] ?? null;
 
